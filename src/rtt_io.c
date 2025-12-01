@@ -23,7 +23,7 @@
  *
  */
 
-
+#include <inttypes.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -77,7 +77,7 @@ typedef struct {
 #define STREAM_RTT_TRIGGER      1
 
 #define RTT_CHANNEL_CONSOLE     0
-#define RTT_CONSOLE_POLL_INT_MS 10
+#define RTT_CONSOLE_POLL_INT_MS 5
 
 #define EV_RTT_TO_TARGET        0x01
 #define EV_RTT_FROM_TARGET_STRT 0x02
@@ -286,7 +286,11 @@ static void rtt_from_target_thread(void *p)
             continue;
         }
 
-        ft_ok = swd_read_word(ft_extRttBuf->addr + offsetof(SEGGER_RTT_BUFFER_UP, WrOff), (uint32_t *)&(ft_extRttBuf->aUp.WrOff));
+	bool read_word_ok = swd_read_word(ft_extRttBuf->addr + offsetof(SEGGER_RTT_BUFFER_UP, WrOff), (uint32_t *)&(ft_extRttBuf->aUp.WrOff));
+	if (!read_word_ok) {
+		picoprobe_error("swd_read_word\n");
+	}
+	ft_ok = read_word_ok;
 
         if (ft_ok  &&  ft_extRttBuf->aUp.WrOff != ft_extRttBuf->aUp.RdOff) {
             //
@@ -300,10 +304,18 @@ static void rtt_from_target_thread(void *p)
             }
             ft_cnt = MIN(ft_cnt, sizeof(ft_buf));
 
-            memset(ft_buf, 0, sizeof(ft_buf));
-            ft_ok = ft_ok  &&  swd_read_memory((uint32_t)ft_extRttBuf->aUp.pBuffer + ft_extRttBuf->aUp.RdOff, ft_buf, ft_cnt);
-            ft_extRttBuf->aUp.RdOff = (ft_extRttBuf->aUp.RdOff + ft_cnt) % ft_extRttBuf->aUp.SizeOfBuffer;
-            ft_ok = ft_ok  &&  swd_write_word(ft_extRttBuf->addr + offsetof(SEGGER_RTT_BUFFER_UP, RdOff), ft_extRttBuf->aUp.RdOff);
+	    memset(ft_buf, 0, sizeof(ft_buf));
+	    bool read_ok = swd_read_memory((uint32_t)ft_extRttBuf->aUp.pBuffer + ft_extRttBuf->aUp.RdOff, ft_buf, ft_cnt);
+	    if (!read_ok) {
+		    picoprobe_error("swd_read_memory\n");
+	    }
+	    ft_ok = ft_ok  && read_ok;
+	    ft_extRttBuf->aUp.RdOff = (ft_extRttBuf->aUp.RdOff + ft_cnt) % ft_extRttBuf->aUp.SizeOfBuffer;
+	    bool write_ok = swd_write_word(ft_extRttBuf->addr + offsetof(SEGGER_RTT_BUFFER_UP, RdOff), ft_extRttBuf->aUp.RdOff);
+	    if (!write_ok) {
+		    picoprobe_error("swd_write_word\n");
+	    }
+	    ft_ok = ft_ok  && write_ok;
 
             rtt_cb_alive = true;
         }
@@ -349,7 +361,7 @@ static bool rtt_from_target(EXT_SEGGER_RTT_BUFFER_UP *extRttBuf,
     if (check_host_buffer) {
         ft_cnt = data_to_host(NULL, 0);
         if (ft_cnt < sizeof(ft_buf) / 4) {
-            //printf("no space in stream %d: %d\n", channel, ft_cnt);
+		picoprobe_error("no space in stream: %" PRIu32 "\n", ft_cnt);
             send_data_to_host = false;
             *worked = true;
         }
@@ -658,7 +670,7 @@ void rtt_io_thread(void *ptr)
                     picoprobe_info("---- RTT_CB found at 0x%x\n", (unsigned)rtt_cb);
                     ++rtt_cb_cnt;
                     led_state(LS_RTT_CB_FOUND);
-                    do_rtt_io(rtt_cb, true);
+		    do_rtt_io(rtt_cb, true);
 
                     if ( !rtt_cb_alive) {
                         uint32_t prev_rtt_cb = rtt_cb;
