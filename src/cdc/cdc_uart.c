@@ -58,7 +58,7 @@
 #include "rtt_io.h"
 
 
-#define STREAM_UART_SIZE      4096
+#define STREAM_UART_SIZE      16384
 #define STREAM_UART_TRIGGER   32
 
 static TaskHandle_t           task_uart = NULL;
@@ -119,7 +119,7 @@ static void cdc_thread(void *ptr)
             max_cnt = tud_cdc_n_write_available(CDC_UART_N);
             if (max_cnt != 0) {
                 max_cnt = MIN(sizeof(cdc_tx_buf), max_cnt);
-                cnt = xStreamBufferReceive(stream_uart, cdc_tx_buf, max_cnt, pdMS_TO_TICKS(500));
+                cnt = xStreamBufferReceive(stream_uart, cdc_tx_buf, max_cnt, 0);
                 if (cnt != 0) {
                     tud_cdc_n_write(CDC_UART_N, cdc_tx_buf, cnt);
                 }

@@ -23,7 +23,7 @@
  *
  */
 
-
+#include <inttypes.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -77,7 +77,7 @@ typedef struct {
 #define STREAM_RTT_TRIGGER      1
 
 #define RTT_CHANNEL_CONSOLE     0
-#define RTT_CONSOLE_POLL_INT_MS 10
+#define RTT_CONSOLE_POLL_INT_MS 5
 
 #define EV_RTT_TO_TARGET        0x01
 #define EV_RTT_FROM_TARGET_STRT 0x02
@@ -426,7 +426,7 @@ static bool rtt_from_target(EXT_SEGGER_RTT_BUFFER_UP *extRttBuf,
     if (check_host_buffer) {
         ft_cnt = data_to_host(NULL, 0);
         if (ft_cnt < sizeof(ft_buf) / 4) {
-            //printf("no space in stream %d: %d\n", channel, ft_cnt);
+            picoprobe_error("no space in stream: %" PRIu32 "\n", ft_cnt);
             send_data_to_host = false;
             *worked = true;
         }

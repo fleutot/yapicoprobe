@@ -37,7 +37,7 @@ option(OPT_MSC_RAM_UF2         "Enable file 'RAM.UF2' on Mass Storage"  1)
 set(OPT_NET                    "NCM" CACHE STRING "Enable lwIP on the Pico via NCM/ECM/RNDIS, disable NET with empty string")
 option(OPT_NET_ECHO_SERVER     "Enable echo server for testing"         1)
 option(OPT_NET_IPERF_SERVER    "Enable iperf server for tuning"         1)
-option(OPT_NET_SYSVIEW_SERVER  "Enable SysView over TCPIP"              1)
+option(OPT_NET_SYSVIEW_SERVER  "Enable SysView over TCPIP"              0)
 option(OPT_CDC_SYSVIEW         "Enable SysView over CDC"                0)
 option(OPT_SERIAL_CRLF         "Insert carriage returns after debug print statements" 0)
 

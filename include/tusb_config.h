@@ -139,7 +139,7 @@
 //------------- BUFFER SIZES -------------//
 
 #define CFG_TUD_CDC_RX_BUFSIZE        64
-#define CFG_TUD_CDC_TX_BUFSIZE        512
+#define CFG_TUD_CDC_TX_BUFSIZE        2048
 
 // these numbers must be in the range 64..1024 (and the same)
 #define CFG_TUD_VENDOR_RX_BUFSIZE     1024
